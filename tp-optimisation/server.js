@@ -16,13 +16,17 @@ app.get("/", (req, res) => {
   );
 });
 
-app.get("/big", (req, res) => {
+app.get("/big", async (req, res, next) => {
   const filePath = path.join(__dirname, "maybe-big-file.txt");
-  if (fs.existsSync(filePath)) {
-    const data = fs.readFileSync(filePath, "utf8");
+  try {
+    const data = await fs.promises.readFile(filePath, "utf8");
     res.send(data.replace(/\n/g, "<br/>"));
-  } else {
-    res.send("Fichier introuvable");
+  } catch (error) {
+    if (error.code === "ENOENT") {
+      res.send("Fichier introuvable");
+      return;
+    }
+    next(error);
   }
 });
 
